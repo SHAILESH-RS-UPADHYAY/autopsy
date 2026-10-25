@@ -1,0 +1,21 @@
+{
+  "name": "autopsy",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Paste a URL, get an evidence-backed teardown of how the site is built and the steps to build your own.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.18"
+  },
+  "scripts": {
+    "start": "node server/index.ts",
+    "dev": "node --watch server/index.ts",
+    "test": "node --test \"server/**/*.test.ts\"",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "25.9.9",
+    "typescript": "6.0.3"
+  },
+  "license": "MIT"
+}
