@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Autopsy — how is this website built?</title>
+  <meta name="description" content="Paste a URL. Autopsy examines headers, DNS, the TLS certificate, markup and scripts, then writes an evidence-backed report of the tech stack and a plan to build your own.">
+  <link rel="icon" href="/brand/mark-tile.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="preload" href="/fonts/newsreader-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/theme.js"></script>
+</head>
+<body>
+  <svg class="defs" aria-hidden="true" focusable="false">
+    <filter id="ink" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.4" xChannelSelector="R" yChannelSelector="G" result="rough"/>
+      <feComponentTransfer in="noise" result="speckle"><feFuncA type="discrete" tableValues="1 1 1 0 1 1 0 1"/></feComponentTransfer>
+      <feComposite in="rough" in2="speckle" operator="in"/>
+    </filter>
+  </svg>
+
+  <header class="masthead">
+    <a href="/" class="brand" aria-label="Autopsy home">
+      <img class="ink-only" src="/brand/wordmark.svg" alt="Autopsy" height="34">
+      <img class="film-only" src="/brand/wordmark-dark.svg" alt="" height="34">
+    </a>
+    <p class="dept">Department of Website Forensics</p>
+    <button type="button" class="theme" id="theme" aria-label="Switch between paper and lightbox">
+      <span class="ink-only">Lightbox</span><span class="film-only">Paper</span>
+    </button>
+  </header>
+
+  <main id="main">
+    <section class="intake" id="intake" aria-labelledby="intake-title">
+      <div class="intake-copy">
+        <p class="eyebrow">Form AX-1 · Request for examination</p>
+        <h1 id="intake-title">Every website leaves evidence.</h1>
+        <p class="lede">Paste an address. Autopsy reads its headers, DNS records, certificate, markup and scripts, then writes up what it is built with, how its pages render, and the steps to build your own. Every claim cites the exhibit it came from.</p>
+      </div>
+      <form class="form" id="form" novalidate>
+        <label for="url">Subject address</label>
+        <div class="row">
+          <input id="url" name="url" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="linear.app" required>
+          <button type="submit" id="go">Open the case</button>
+        </div>
+        <p class="hint" id="hint">One visit to the page and a handful of its scripts. Nothing about the subject is stored.</p>
+        <p class="try">Examples:
+          <button type="button" class="chip" data-url="linear.app">linear.app</button>
+          <button type="button" class="chip" data-url="stripe.com">stripe.com</button>
+          <button type="button" class="chip" data-url="wordpress.org">wordpress.org</button>
+          <button type="button" class="chip" data-url="shopify.com">shopify.com</button>
+        </p>
+      </form>
+      <aside class="archive" id="archive" aria-labelledby="archive-title" hidden>
+        <h2 id="archive-title">Case archive</h2>
+        <ol id="archive-list"></ol>
+      </aside>
+    </section>
+
+    <section class="exam" id="exam" aria-labelledby="exam-title" hidden>
+      <p class="eyebrow" id="exam-case">Case pending</p>
+      <h2 id="exam-title">Examination in progress</h2>
+      <p class="exam-subject" id="exam-subject"></p>
+      <ol class="log" id="log" aria-live="polite"></ol>
+      <div class="redacted" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+    </section>
+
+    <section class="refusal" id="refusal" role="alert" hidden></section>
+
+    <article class="report" id="report" hidden></article>
+  </main>
+
+  <footer class="colophon">
+    <p>Autopsy examines what any browser could see. It sends one honest request per page and keeps no copy of the subject.</p>
+  </footer>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
