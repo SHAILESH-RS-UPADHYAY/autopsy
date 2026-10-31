@@ -1,2 +1,9 @@
 node_modules/
 docs/PLAN.md
+.cloudflare/
+.wrangler/
+.env*
+.dev.vars*
+
+# render-tier output in subfolders
+/*/**/.hallmark/
