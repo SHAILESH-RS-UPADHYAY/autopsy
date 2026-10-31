@@ -1,0 +1,50 @@
+@font-face { font-family: "Newsreader"; font-weight: 400; font-display: swap; src: url("/fonts/newsreader-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Newsreader"; font-weight: 400; font-style: italic; font-display: swap; src: url("/fonts/newsreader-latin-400-italic.woff2") format("woff2"); }
+@font-face { font-family: "Newsreader"; font-weight: 600; font-display: swap; src: url("/fonts/newsreader-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "Courier Prime"; font-weight: 400; font-display: swap; src: url("/fonts/courier-prime-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "Archivo"; font-weight: 800; font-display: swap; src: url("/fonts/archivo-latin-800-normal.woff2") format("woff2"); }
+
+/* Paper: a case file on aged stock, the default. */
+:root {
+  --space-3xs: 2px; --space-2xs: 4px; --space-xs: 8px; --space-sm: 12px; --space-md: 16px; --space-lg: 24px; --space-xl: 40px; --space-2xl: 64px; --space-3xl: 96px; --space-4xl: 144px;
+  --text-xs: 0.75rem; --text-sm: 0.875rem; --text-md: 1rem; --text-lg: 1.2rem; --text-xl: 1.44rem; --text-2xl: 1.728rem; --text-3xl: 2.074rem;
+  --text-display-s: 1.44rem; --text-display: 1.728rem; --text-section: 1.2rem; --text-title: 1rem; --text-lead: 1rem;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-in: cubic-bezier(0.7, 0, 0.84, 0); --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-micro: 120ms; --dur-short: 220ms; --dur-long: 420ms;
+  --color-error: oklch(47% 0.175 13); --color-success: oklch(45% 0.1 150);
+  --container: 1180px; --gutter: 32px; --gap-columns: 32px; --section-gap-s: 120px; --section-gap: 144px; --section-gap-l: 176px;
+  --z-base: 1; --z-raised: 10; --z-dropdown: 100; --z-sticky: 200; --z-sticky-nav: 300; --z-modal: 400; --z-toast: 500; --z-tooltip: 600;
+  --color-paper: oklch(93.5% 0.018 86.1); --color-paper-2: oklch(90.5% 0.027 87.9); --color-paper-3: oklch(86.9% 0.032 86.5);
+  --color-ink: oklch(22.4% 0.010 80.6); --color-ink-2: oklch(38.9% 0.018 80.6); --color-muted: oklch(55.5% 0.023 81.7);
+  --color-rule: oklch(80.8% 0.037 85.4);
+  --color-accent: oklch(47% 0.175 13); --color-accent-ink: oklch(93.5% 0.018 86.1); --color-focus: oklch(47% 0.2 13);
+  /* Ballpoint for the examiner's notes; the yellow of a scene marker for exhibit tags. */
+  --color-note: oklch(41.7% 0.093 258.5); --color-tag: oklch(83.4% 0.158 89); --color-tag-ink: oklch(22.4% 0.010 80.6);
+  --font-display: "Newsreader", Georgia, serif; --font-body: "Newsreader", Georgia, serif;
+  --font-label: "Archivo", "Arial Narrow", sans-serif; --font-outlier: "Courier Prime", "Courier New", monospace;
+  --radius-card: 2px; --radius-pill: 999px; --rule-hair: 1px; --shadow-card: none;
+  --tracking-display: -0.02em;
+  color-scheme: light;
+}
+
+/* Lightbox: the same file read as X-ray film. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-paper: oklch(17.9% 0.009 240.5); --color-paper-2: oklch(21.8% 0.013 243.5); --color-paper-3: oklch(25.9% 0.016 240.7);
+    --color-ink: oklch(94.4% 0.010 228.9); --color-ink-2: oklch(80.4% 0.017 233.1); --color-muted: oklch(63.8% 0.022 234.1);
+    --color-rule: oklch(31.9% 0.018 238.7);
+    --color-accent: oklch(72% 0.15 13); --color-accent-ink: oklch(17.9% 0.009 240.5); --color-focus: oklch(74% 0.17 13);
+    --color-note: oklch(76% 0.086 257.9); --color-tag-ink: oklch(17.9% 0.009 240.5);
+    --color-error: oklch(72% 0.15 13); --color-success: oklch(78% 0.12 150);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --color-paper: oklch(17.9% 0.009 240.5); --color-paper-2: oklch(21.8% 0.013 243.5); --color-paper-3: oklch(25.9% 0.016 240.7);
+  --color-ink: oklch(94.4% 0.010 228.9); --color-ink-2: oklch(80.4% 0.017 233.1); --color-muted: oklch(63.8% 0.022 234.1);
+  --color-rule: oklch(31.9% 0.018 238.7);
+  --color-accent: oklch(72% 0.15 13); --color-accent-ink: oklch(17.9% 0.009 240.5); --color-focus: oklch(74% 0.17 13);
+  --color-note: oklch(76% 0.086 257.9); --color-tag-ink: oklch(17.9% 0.009 240.5);
+  --color-error: oklch(72% 0.15 13); --color-success: oklch(78% 0.12 150);
+  color-scheme: dark;
+}
