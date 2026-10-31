@@ -61,7 +61,7 @@ export async function probeDns(host: string): Promise<DnsRecords> {
 const name = (o: Record<string, string | string[]> | undefined) => {
   if (!o) return '';
   const pick = (k: string) => (Array.isArray(o[k]) ? (o[k] as string[])[0] : (o[k] as string)) || '';
-  return [pick('O'), pick('CN')].filter(Boolean).join(' · ');
+  return [pick('O'), pick('CN')].filter(Boolean).join(', ');
 };
 
 /** Reads the certificate. Connects only to an address that passed the public-address check. */
