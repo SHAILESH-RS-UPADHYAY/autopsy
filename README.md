@@ -2,6 +2,11 @@
 
 <p align="center"><b>Paste a URL. Get an evidence-backed teardown of how the site is built, and the steps to build your own.</b></p>
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/readme/examination-dark.svg">
+  <img src="docs/readme/examination-light.svg" width="100%" alt="Autopsy in motion: a real examination of linear.app streams through seven stages, the case file fills with cited evidence, and the verdict stamps land.">
+</picture>
+
 ---
 
 Most stack detectors give you a wall of logos. Autopsy writes a **case file**: every technology it names cites the exhibit that proves it (a header, a script URL, a DNS record, a line from a bundle). It also explains how the pages render and gives you a step-by-step plan to rebuild the same architecture.
