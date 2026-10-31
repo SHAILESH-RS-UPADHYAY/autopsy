@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Autopsy — how is this website built?</title>
+  <title>Autopsy examines how any website is built</title>
   <meta name="description" content="Paste a URL. Autopsy examines headers, DNS, the TLS certificate, markup and scripts, then writes an evidence-backed report of the tech stack and a plan to build your own.">
   <link rel="icon" href="/brand/mark-tile.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
@@ -23,8 +23,8 @@
 
   <header class="masthead">
     <a href="/" class="brand" aria-label="Autopsy home">
-      <img class="ink-only" src="/brand/wordmark.svg" alt="Autopsy" height="34">
-      <img class="film-only" src="/brand/wordmark-dark.svg" alt="" height="34">
+      <img class="ink-only" src="/brand/wordmark.svg" alt="Autopsy" width="284" height="64">
+      <img class="film-only" src="/brand/wordmark-dark.svg" alt="" width="284" height="64">
     </a>
     <p class="dept">Department of Website Forensics</p>
     <button type="button" class="theme" id="theme" aria-label="Switch between paper and lightbox">
@@ -35,23 +35,26 @@
   <main id="main">
     <section class="intake" id="intake" aria-labelledby="intake-title">
       <div class="intake-copy">
-        <p class="eyebrow">Form AX-1 · Request for examination</p>
         <h1 id="intake-title">Every website leaves evidence.</h1>
         <p class="lede">Paste an address. Autopsy reads its headers, DNS records, certificate, markup and scripts, then writes up what it is built with, how its pages render, and the steps to build your own. Every claim cites the exhibit it came from.</p>
       </div>
       <form class="form" id="form" novalidate>
-        <label for="url">Subject address</label>
-        <div class="row">
-          <input id="url" name="url" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="linear.app" required>
-          <button type="submit" id="go">Open the case</button>
-        </div>
-        <p class="hint" id="hint">One visit to the page and a handful of its scripts. Nothing about the subject is stored.</p>
-        <p class="try">Examples:
+        <fieldset>
+          <legend>Request for examination, form AX-1</legend>
+          <label for="url">Subject address</label>
+          <div class="row">
+            <input id="url" name="url" type="text" inputmode="url" autocomplete="url" spellcheck="false" placeholder="linear.app" required aria-describedby="hint">
+            <button type="submit" id="go">Open the case</button>
+          </div>
+          <p class="hint" id="hint">One visit to the page and a handful of its scripts. Nothing about the subject is stored.</p>
+        </fieldset>
+        <div class="try">
+          <span>Examples</span>
           <button type="button" class="chip" data-url="linear.app">linear.app</button>
           <button type="button" class="chip" data-url="stripe.com">stripe.com</button>
           <button type="button" class="chip" data-url="wordpress.org">wordpress.org</button>
           <button type="button" class="chip" data-url="shopify.com">shopify.com</button>
-        </p>
+        </div>
       </form>
       <aside class="archive" id="archive" aria-labelledby="archive-title" hidden>
         <h2 id="archive-title">Case archive</h2>
@@ -60,9 +63,9 @@
     </section>
 
     <section class="exam" id="exam" aria-labelledby="exam-title" hidden>
-      <p class="eyebrow" id="exam-case">Case pending</p>
       <h2 id="exam-title">Examination in progress</h2>
       <p class="exam-subject" id="exam-subject"></p>
+      <p class="exam-case" id="exam-case" role="status">Case pending</p>
       <ol class="log" id="log" aria-live="polite"></ol>
       <div class="redacted" aria-hidden="true">
         <span></span><span></span><span></span><span></span><span></span>
