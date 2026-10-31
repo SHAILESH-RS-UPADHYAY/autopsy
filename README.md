@@ -1,4 +1,4 @@
-<p align="center"><img src="brand/wordmark.svg" alt="Autopsy" height="56"></p>
+<p align="center"><picture><source media="(prefers-color-scheme: dark)" srcset="brand/wordmark-dark.svg"><img src="brand/wordmark.svg" alt="Autopsy" height="56"></picture></p>
 
 <p align="center"><b>Paste a URL. Get an evidence-backed teardown of how the site is built, and the steps to build your own.</b></p>
 
