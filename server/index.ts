@@ -3,20 +3,24 @@ import { readFile } from 'node:fs/promises';
 import { extname, join, normalize, sep } from 'node:path';
 import { BlockedError, FetchError } from './fetch.ts';
 import { examine, normalizeInput, type CaseFile } from './examine.ts';
+import { turnstileFromEnv, verify } from './turnstile.ts';
 
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC = join(import.meta.dirname, '..', 'public');
 const BRAND = join(import.meta.dirname, '..', 'brand');
 const TRUST_PROXY = process.env.TRUST_PROXY === '1';
+const TURNSTILE = turnstileFromEnv();
+const CHALLENGES = 'https://challenges.cloudflare.com';
 
 const TYPES: Record<string, string> = {
   '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json', '.ico': 'image/x-icon',
 };
 
-// Autopsy grades other sites' headers, so it sends a full set itself.
+// Autopsy grades other sites' headers, so it sends a full set itself. Cloudflare's challenge script
+// and frame are allowed only when Turnstile is configured.
 const SECURITY_HEADERS = {
-  'content-security-policy': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'",
+  'content-security-policy': `default-src 'self'; script-src 'self'${TURNSTILE ? ` ${CHALLENGES}` : ''}; ${TURNSTILE ? `frame-src ${CHALLENGES}; ` : ''}style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'`,
   'strict-transport-security': 'max-age=31536000; includeSubDomains',
   'x-content-type-options': 'nosniff',
   'x-frame-options': 'DENY',
@@ -53,7 +57,7 @@ function failure(err: unknown): { kind: string; message: string } {
   return { kind: 'internal', message: 'The examination failed unexpectedly.' };
 }
 
-async function handleExamine(req: http.IncomingMessage, res: http.ServerResponse, target: string) {
+async function handleExamine(req: http.IncomingMessage, res: http.ServerResponse, target: string, token: string | null) {
   res.writeHead(200, { ...SECURITY_HEADERS, 'content-type': 'text/event-stream; charset=utf-8', 'cache-control': 'no-store', connection: 'keep-alive', 'x-accel-buffering': 'no' });
   const send = (event: string, data: unknown) => res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 
@@ -62,6 +66,10 @@ async function handleExamine(req: http.IncomingMessage, res: http.ServerResponse
     key = normalizeInput(target).toLowerCase();
   } catch (err) {
     send('failure', failure(err));
+    return res.end();
+  }
+  if (TURNSTILE && !(await verify(TURNSTILE, token, clientIp(req)))) {
+    send('failure', { kind: 'challenge', message: 'The browser check did not pass or has expired. Go back, let it finish, and open the case again.' });
     return res.end();
   }
   const hit = cache.get(key);
@@ -101,7 +109,10 @@ async function serveStatic(pathname: string, res: http.ServerResponse) {
     return;
   }
   try {
-    const body = await readFile(file);
+    let body = await readFile(file);
+    // The site key rides in the page only when Turnstile is on; otherwise index.html is served as is.
+    if (TURNSTILE && rel === 'index.html') body = Buffer.from(String(body).replace('</head>', `  <meta name="turnstile-sitekey" content="${TURNSTILE.siteKey}">
+</head>`));
     const long = /\/fonts\//.test(pathname);
     res.writeHead(200, { ...SECURITY_HEADERS, 'content-type': TYPES[extname(file)] ?? 'application/octet-stream', 'cache-control': long ? 'public, max-age=31536000, immutable' : 'no-cache' });
     res.end(body);
@@ -113,7 +124,7 @@ async function serveStatic(pathname: string, res: http.ServerResponse) {
 export const server = http.createServer((req, res) => {
   const url = new URL(req.url ?? '/', 'http://localhost');
   if (req.method !== 'GET' && req.method !== 'HEAD') return res.writeHead(405, SECURITY_HEADERS).end();
-  if (url.pathname === '/api/examine') return void handleExamine(req, res, url.searchParams.get('url') ?? '');
+  if (url.pathname === '/api/examine') return void handleExamine(req, res, url.searchParams.get('url') ?? '', url.searchParams.get('token'));
   if (url.pathname === '/api/health') return res.writeHead(200, { ...SECURITY_HEADERS, 'content-type': 'application/json' }).end('{"ok":true}');
   return void serveStatic(url.pathname, res);
 });
