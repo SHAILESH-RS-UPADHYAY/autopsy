@@ -6,8 +6,6 @@
 /* Hallmark · moved the stamp ink from brick red (hue 29) to crimson (hue 13) · gate 65 names cream paper, a serif display and a terracotta accent together; the accent moves first */
 /* Hallmark · dropped the page-wide paper grain · texture is one budgeted family; the ink speckle stays on the big stamps, where it is the stamp's own material */
 /* Hallmark · reworded "Form AX-1 · Request for examination" to the form's legend "Request for examination, form AX-1" · 54 names the eyebrow; the label moved to what it labels */
-@import url("./tokens.css");
-@import url("./base.css");
 
 body { --display-weight: 600; font-size: 1.125rem; line-height: 1.6; }
 button, input { color: inherit; }
