@@ -2,14 +2,20 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const ARCHIVE_KEY = 'ax-archive';
 const STAGES = { intake: 'Intake', dns: 'DNS', tls: 'Certificate', document: 'Document', scripts: 'Scripts', signatures: 'Signatures', verdict: 'Verdict' };
-const STAMP = { confirmed: ['Confirmed', ''], probable: ['Probable', 'faint'], trace: ['Trace', 'faint'], implied: ['Implied', 'blue'] };
+const STAMP = { confirmed: ['Confirmed', ''], probable: ['Probable', 'faint'], trace: ['Trace', 'faint'], implied: ['Implied', 'note'] };
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 let source = null;
 let current = null;
 
 /* ── Views ── */
+// Each view change turns the page of the file where the browser supports view transitions.
 function show(view) {
-  for (const id of ['intake', 'exam', 'refusal', 'report']) $(id).hidden = id !== view;
-  scrollTo({ top: 0 });
+  const change = () => {
+    for (const id of ['intake', 'exam', 'refusal', 'report']) $(id).hidden = id !== view;
+    scrollTo({ top: 0 });
+  };
+  if (document.startViewTransition && !reduced()) document.startViewTransition(change);
+  else change();
 }
 
 /* ── Archive: a per-browser list of past cases ── */
@@ -47,8 +53,9 @@ function examine(raw) {
   source?.close();
   current = null;
   history.replaceState(null, '', `?url=${encodeURIComponent(input)}`);
+  $('exam-title').textContent = `Examining ${input.replace(/^https?:\/\//i, '').replace(/\/.*$/, '')}`;
   $('exam-subject').textContent = input;
-  $('exam-case').textContent = 'Case pending';
+  $('exam-case').textContent = 'Case pending: the number is assigned when the examination closes.';
   $('log').replaceChildren();
   show('exam');
   const started = performance.now();
@@ -95,7 +102,7 @@ function refuse(f, input) {
   };
   const [title, stamp] = titles[f.kind] ?? titles.internal;
   $('refusal').innerHTML = `<span class="stamp big land">${esc(stamp)}</span>
-    <p class="eyebrow">Case note · ${esc(input)}</p><h2>${esc(title)}</h2><p>${esc(f.message)}</p>
+    <h2>${esc(title)}</h2><p class="case">Case note on ${esc(input)}</p><p>${esc(f.message)}</p>
     <button type="button" id="again">Back to intake</button>`;
   show('refusal');
   $('again').addEventListener('click', () => {
@@ -136,15 +143,15 @@ function renderReport(r) {
   $('report').innerHTML = `
     <header class="case-head">
       <div>
-        <ul class="docket">
-          <li class="no"><span>Case no.</span><b>${esc(r.caseNo)}</b></li>
-          <li><span>Examined</span><b>${esc(when.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }))}</b></li>
-          <li><span>Duration</span><b>${(r.durationMs / 1000).toFixed(1)} s</b></li>
-          <li><span>Status</span><b>HTTP ${esc(s.status)}</b></li>
-          <li><span>Exhibits</span><b>${r.exhibits.length}</b></li>
-        </ul>
+        <dl class="docket">
+          <div class="no"><dt>Case no.</dt><dd>${esc(r.caseNo)}</dd></div>
+          <div><dt>Examined</dt><dd><time datetime="${esc(r.examinedAt)}">${esc(when.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }))}</time></dd></div>
+          <div><dt>Duration</dt><dd>${(r.durationMs / 1000).toFixed(1)}&nbsp;s</dd></div>
+          <div><dt>Status</dt><dd>HTTP ${esc(s.status)}</dd></div>
+          <div><dt>Exhibits</dt><dd>${r.exhibits.length}</dd></div>
+        </dl>
         <h1>${esc(s.title || s.host)}</h1>
-        <p class="final-url">${esc(s.finalUrl)}${s.redirects.length ? ` · reached after ${s.redirects.length} redirect${s.redirects.length > 1 ? 's' : ''}` : ''}${r.cached ? ' · from the last 10 minutes' : ''}</p>
+        <p class="final-url">${esc(s.finalUrl)}${s.redirects.length ? `, reached after ${s.redirects.length} redirect${s.redirects.length > 1 ? 's' : ''}` : ''}${r.cached ? ', examined in the last 10 minutes' : ''}</p>
         <p class="summary">${lead}. ${esc(r.verdict.summary)}</p>
         <div class="actions">
           <button type="button" class="primary" data-act="new">New case</button>
@@ -160,62 +167,64 @@ function renderReport(r) {
     </header>
 
     <section class="sec" aria-labelledby="s1">
-      <div class="sec-head"><span class="num">I</span><h2 id="s1">Findings</h2><p>Grouped by system. Numbers point to the exhibits that prove each one.</p></div>
+      <div class="sec-head"><h2 id="s1">I. Findings</h2><p>Grouped by system. Numbers point to the exhibits that prove each one.</p></div>
       <div>${byCat.length ? byCat.map(([c, list]) => `<div class="system"><h3>${esc(r.categories[c])}</h3>${list.map(finding).join('')}</div>`).join('') : '<p class="none">Nothing identifiable. The site may be hand-built or hide its tooling well.</p>'}
         ${traces.length ? `<div class="system"><h3>Traces, weak evidence</h3>${traces.map(finding).join('')}</div>` : ''}</div>
     </section>
 
     <section class="sec" aria-labelledby="s2">
-      <div class="sec-head"><span class="num">II</span><h2 id="s2">How pages render</h2><p>Read from the first HTML response, before any JavaScript ran.</p></div>
+      <div class="sec-head"><h2 id="s2">II. How pages render</h2><p>Read from the first HTML response, before any JavaScript ran.</p></div>
       <div><p class="mode-line"><b>${esc(r.verdict.mode)}</b>${esc(r.verdict.summary)}</p>
         <ul class="reasons">${r.verdict.reasons.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>
     </section>
 
     <section class="sec" aria-labelledby="s3">
-      <div class="sec-head"><span class="num">III</span><h2 id="s3">Security posture</h2><p>Response headers and the certificate. Grade ${esc(r.security.grade)}: ${r.security.rows.filter((x) => x.pass).length} of ${r.security.rows.length} checks pass.</p></div>
+      <div class="sec-head"><h2 id="s3">III. Security posture</h2><p>Response headers and the certificate. Grade ${esc(r.security.grade)}: ${r.security.rows.filter((x) => x.pass).length} of ${r.security.rows.length} checks pass.</p></div>
       <div><table class="security"><tbody>${r.security.rows.map((x) => `<tr><th scope="row">${esc(x.label)}</th>
-        <td class="mark ${x.pass ? 'pass' : 'fail'}">${x.pass ? 'PASS' : 'FAIL'}</td><td class="val">${esc(x.value)}</td></tr>`).join('')}</tbody></table></div>
+        <td class="mark ${x.pass ? 'pass' : 'fail'}">${x.pass ? 'Pass' : 'Fail'}</td><td class="val">${esc(x.value)}</td></tr>`).join('')}</tbody></table></div>
     </section>
 
     <section class="sec" aria-labelledby="s4">
-      <div class="sec-head"><span class="num">IV</span><h2 id="s4">Build your own</h2><p>The same architecture, step by step. Each step says which evidence it follows from.</p></div>
+      <div class="sec-head"><h2 id="s4">IV. Build your own</h2><p>The same architecture, step by step. Each step says which evidence it follows from.</p></div>
       <ol class="steps">${r.protocol.map((p) => `<li><span class="phase">${esc(p.phase)}</span><h3>${esc(p.title)}</h3>
         <div class="cmd"><pre>${esc(p.command)}</pre><button type="button" data-copy>Copy</button></div><p class="why">${esc(p.why)}</p></li>`).join('')}</ol>
     </section>
 
     <section class="sec" aria-labelledby="s5">
-      <div class="sec-head"><span class="num">V</span><h2 id="s5">Exhibits</h2><p>Raw evidence, quoted as received. Cookie values are never shown.</p></div>
-      <ol class="exhibits">${r.exhibits.map((x) => `<li class="exhibit" id="ex-${x.n}"><span class="tag">EX. ${String(x.n).padStart(2, '0')}</span>
-        <div><span class="src">${esc(x.source)} · ${esc(x.label)}</span><code>${esc(x.excerpt)}</code></div></li>`).join('') || '<li><p class="none">No exhibits were collected.</p></li>'}</ol>
+      <div class="sec-head"><h2 id="s5">V. Exhibits</h2><p>Raw evidence, quoted as received. Cookie values are never shown.</p></div>
+      <ol class="exhibits">${r.exhibits.map((x) => `<li class="exhibit" id="ex-${x.n}"><span class="tag">Ex. ${String(x.n).padStart(2, '0')}</span>
+        <div><span class="src">${esc(x.source)}, ${esc(x.label)}</span><code>${esc(x.excerpt)}</code></div></li>`).join('') || '<li><p class="none">No exhibits were collected.</p></li>'}</ol>
     </section>
 
     <section class="sec" aria-labelledby="s6">
-      <div class="sec-head"><span class="num">VI</span><h2 id="s6">Appendix</h2><p>Records gathered along the way.</p></div>
+      <div class="sec-head"><h2 id="s6">VI. Appendix</h2><p>Records gathered along the way.</p></div>
       <div class="appendix">
         <div><h3>DNS</h3><dl>${r.dns ? [['A', r.dns.a], ['AAAA', r.dns.aaaa], ['CNAME', r.dns.cname], ['NS', r.dns.ns], ['MX', r.dns.mx]].filter(([, v]) => v.length).map(([k, v]) => `<dt>${k}</dt><dd>${esc(v.slice(0, 6).join(', '))}</dd>`).join('') || '<dd>No records answered.</dd>' : '<dd>DNS did not answer.</dd>'}</dl></div>
-        <div><h3>Certificate</h3><dl>${r.tls ? `<dt>Issuer</dt><dd>${esc(r.tls.issuer)}</dd><dt>Valid until</dt><dd>${esc(r.tls.validTo.slice(0, 10))} (${r.tls.daysLeft} days)</dd><dt>Protocol</dt><dd>${esc(r.tls.protocol)} · ALPN ${esc(r.tls.alpn || 'none')}</dd>` : '<dd>Not examined.</dd>'}</dl></div>
-        <div><h3>Route</h3><dl>${s.redirects.map((x) => `<dt>${x.status}</dt><dd>${esc(x.url)}</dd>`).join('')}<dt>${esc(s.status)}</dt><dd>${esc(s.finalUrl)}</dd><dt>Size</dt><dd>${(s.bytes / 1024).toFixed(0)} KB${s.lang ? ` · lang ${esc(s.lang)}` : ''}</dd></dl></div>
+        <div><h3>Certificate</h3><dl>${r.tls ? `<dt>Issuer</dt><dd>${esc(r.tls.issuer)}</dd><dt>Valid until</dt><dd>${esc(r.tls.validTo.slice(0, 10))} (${r.tls.daysLeft} days)</dd><dt>Protocol</dt><dd>${esc(r.tls.protocol)}, ALPN ${esc(r.tls.alpn || 'none')}</dd>` : '<dd>Not examined.</dd>'}</dl></div>
+        <div><h3>Route</h3><dl>${s.redirects.map((x) => `<dt>${x.status}</dt><dd>${esc(x.url)}</dd>`).join('')}<dt>${esc(s.status)}</dt><dd>${esc(s.finalUrl)}</dd><dt>Size</dt><dd>${(s.bytes / 1024).toFixed(0)}&nbsp;KB${s.lang ? `, language ${esc(s.lang)}` : ''}</dd></dl></div>
         ${r.notes.length ? `<div><h3>Notes</h3><ul class="notes">${r.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul></div>` : ''}
       </div>
     </section>`;
 
+  // Row order for the ink-in (set through the CSSOM: the CSP refuses inline style attributes).
+  $('report').querySelectorAll('.finding').forEach((el, i) => el.style.setProperty('--i', Math.min(i, 24)));
   const stamps = $('report').querySelectorAll('.stamp.land');
-  stamps.forEach((st, i) => st.style.setProperty('--delay', `${0.15 + i * 0.22}s`));
+  stamps.forEach((st, i) => st.style.setProperty('--delay', `${150 + i * 220}ms`));
   stamps[1]?.style.setProperty('--tilt', '5deg');
   show('report');
-  document.title = `${r.caseNo} · ${s.host} — Autopsy`;
+  document.title = `Case ${r.caseNo}, ${s.host}, Autopsy`;
 }
 
 /* ── Exports ── */
 function markdown(r) {
-  const lines = [`# Autopsy case ${r.caseNo}: ${r.subject.host}`, '', `Examined ${r.examinedAt} · ${r.subject.finalUrl}`, '', `**Rendering:** ${r.verdict.mode}. ${r.verdict.summary}`, `**Security grade:** ${r.security.grade}`, '', '## Findings'];
+  const lines = [`# Autopsy case ${r.caseNo}: ${r.subject.host}`, '', `Examined ${r.examinedAt}, ${r.subject.finalUrl}`, '', `**Rendering:** ${r.verdict.mode}. ${r.verdict.summary}`, `**Security grade:** ${r.security.grade}`, '', '## Findings'];
   for (const f of r.findings.filter((x) => x.confidence !== 'trace')) {
     lines.push(`- **${f.name}**${f.version ? ` ${f.version}` : ''} (${f.confidence}${f.impliedBy.length ? `, implied by ${f.impliedBy.join(', ')}` : ''})${f.exhibits.length ? ` [${f.exhibits.map((n) => `ex. ${n}`).join(', ')}]` : ''}`);
   }
   lines.push('', '## Build your own');
   r.protocol.forEach((p, i) => lines.push(`${i + 1}. **${p.title}** (${p.phase})`, '', '   ```', ...p.command.split('\n').map((c) => `   ${c}`), '   ```', `   ${p.why}`, ''));
   lines.push('## Exhibits');
-  for (const x of r.exhibits) lines.push(`${x.n}. ${x.source} · ${x.label}: \`${x.excerpt.replace(/`/g, "'")}\``);
+  for (const x of r.exhibits) lines.push(`${x.n}. ${x.source}, ${x.label}: \`${x.excerpt.replace(/`/g, "'")}\``);
   return lines.join('\n');
 }
 
@@ -230,7 +239,11 @@ async function copy(text, btn) {
     await navigator.clipboard.writeText(text);
     const old = btn.textContent;
     btn.textContent = 'Copied';
-    setTimeout(() => (btn.textContent = old), 1400);
+    btn.dataset.state = 'copied';
+    setTimeout(() => {
+      btn.textContent = old;
+      delete btn.dataset.state;
+    }, 2500);
   } catch {
     btn.textContent = 'Copy blocked';
   }
@@ -256,7 +269,7 @@ document.addEventListener('click', (e) => {
   const ex = t.closest('[data-ex]');
   if (ex) {
     const target = $(`ex-${ex.dataset.ex}`);
-    target?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    target?.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' });
     target?.classList.add('lit');
     setTimeout(() => target?.classList.remove('lit'), 1600);
     return;
