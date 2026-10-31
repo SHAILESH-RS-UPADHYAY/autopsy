@@ -60,6 +60,17 @@ npm run deploy
 
 The Dockerfile also runs as is on any container host (Render, Fly.io, Railway, a VPS).
 
+### Optional bot check (Turnstile)
+
+Off unless both keys are set. With them, the page loads Cloudflare Turnstile, the CSP widens to `challenges.cloudflare.com` only then, and every examination needs a fresh token that siteverify accepts for the action `examine` on one of `TURNSTILE_HOSTNAMES`.
+
+```bash
+TURNSTILE_SITE_KEY=0x4AAA... TURNSTILE_SECRET=... TURNSTILE_HOSTNAMES=autopsy.example.com npm start
+# on Cloudflare: npx wrangler secret put TURNSTILE_SECRET --name autopsy (same for the other two)
+```
+
+Cloudflare's test secret returns no `action`, so the strict check refuses it; test against a real widget.
+
 ## Design: a forensic case file
 
 Aged paper, a docket of case number, date, duration and status, Newsreader for the report, Courier Prime for typed evidence and Archivo for labels. Verdicts land as rubber stamps, set slightly off-axis and roughened with an SVG turbulence filter. Exhibits wear yellow evidence tags, and hovering an exhibit number lights every finding that cites it. The dark theme is a **lightbox**: the same file read as X-ray film.
