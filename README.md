@@ -49,6 +49,17 @@ There are no runtime dependencies. Node 22.18+ runs the TypeScript directly. Set
 docker build -t autopsy . && docker run -p 3000:3000 autopsy
 ```
 
+### Deploy
+
+The examiner needs `node:tls` peer certificates and its own DNS resolver, which the Workers runtime does not offer, so on Cloudflare the unchanged Node server runs as a **Container** behind a thin Worker (`worker/index.ts`, configured in `cloudflare.config.ts`). It needs Docker running locally and a Workers Paid plan.
+
+```bash
+npx cf auth login
+npm run deploy
+```
+
+The Dockerfile also runs as is on any container host (Render, Fly.io, Railway, a VPS).
+
 ## Design: a forensic case file
 
 Aged paper, a docket of case number, date, duration and status, Newsreader for the report, Courier Prime for typed evidence and Archivo for labels. Verdicts land as rubber stamps, set slightly off-axis and roughened with an SVG turbulence filter. Exhibits wear yellow evidence tags, and hovering an exhibit number lights every finding that cites it. The dark theme is a **lightbox**: the same file read as X-ray film.
