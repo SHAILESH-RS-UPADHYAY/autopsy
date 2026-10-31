@@ -1,11 +1,38 @@
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const ARCHIVE_KEY = 'ax-archive';
+const HINT = 'One visit to the page and a handful of its scripts. Nothing about the subject is stored.';
 const STAGES = { intake: 'Intake', dns: 'DNS', tls: 'Certificate', document: 'Document', scripts: 'Scripts', signatures: 'Signatures', verdict: 'Verdict' };
 const STAMP = { confirmed: ['Confirmed', ''], probable: ['Probable', 'faint'], trace: ['Trace', 'faint'], implied: ['Implied', 'note'] };
 const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 let source = null;
 let current = null;
+
+/* ── Browser check: Turnstile renders only when the server put a site key in the page ── */
+const sitekey = document.querySelector('meta[name="turnstile-sitekey"]')?.content;
+let widget = null;
+let waiting = null;
+if (sitekey) {
+  const box = document.createElement('div');
+  box.className = 'check';
+  $('hint').after(box);
+  window.axTurnstile = () => {
+    const theme = document.documentElement.dataset.theme;
+    widget = turnstile.render(box, {
+      sitekey, action: 'examine', theme: theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : 'auto',
+      size: matchMedia('(max-width: 360px)').matches ? 'compact' : 'flexible',
+      // A case asked for before the check finished runs as soon as the token arrives.
+      callback: () => waiting !== null && examine(waiting),
+    });
+  };
+  const script = document.createElement('script');
+  script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=axTurnstile';
+  script.async = true;
+  document.head.append(script);
+}
+const checkToken = () => (widget === null ? '' : turnstile.getResponse(widget) || '');
+// Tokens are single use, so each finished case asks for a fresh one.
+const recheck = () => widget !== null && turnstile.reset(widget);
 
 /* ── Views ── */
 // Each view change turns the page of the file where the browser supports view transitions.
@@ -50,6 +77,15 @@ function examine(raw) {
     $('url').focus();
     return;
   }
+  const token = sitekey ? checkToken() : '';
+  if (sitekey && !token) {
+    waiting = input;
+    $('hint').textContent = 'Finishing the browser check. The case opens the moment it passes.';
+    $('hint').classList.remove('bad');
+    return;
+  }
+  waiting = null;
+  $('hint').textContent = HINT;
   source?.close();
   current = null;
   history.replaceState(null, '', `?url=${encodeURIComponent(input)}`);
@@ -61,7 +97,7 @@ function examine(raw) {
   const started = performance.now();
   const rows = new Map();
 
-  source = new EventSource(`/api/examine?url=${encodeURIComponent(input)}`);
+  source = new EventSource(`/api/examine?url=${encodeURIComponent(input)}${token ? `&token=${encodeURIComponent(token)}` : ''}`);
   source.addEventListener('stage', (e) => {
     const s = JSON.parse(e.data);
     let li = rows.get(s.stage);
@@ -78,16 +114,19 @@ function examine(raw) {
   });
   source.addEventListener('report', (e) => {
     source.close();
+    recheck();
     current = JSON.parse(e.data);
     remember(current);
     renderReport(current);
   });
   source.addEventListener('failure', (e) => {
     source.close();
+    recheck();
     refuse(JSON.parse(e.data), input);
   });
   source.onerror = () => {
     if (current || source.readyState !== EventSource.CLOSED) return;
+    recheck();
     refuse({ kind: 'unreachable', message: 'The connection to the examiner dropped. Check that the server is running and try again.' }, input);
   };
 }
@@ -98,6 +137,7 @@ function refuse(f, input) {
     unreachable: ['The subject could not be reached', 'No answer'],
     'rate-limited': ['Too many cases at once', 'Hold'],
     cancelled: ['Examination cancelled', 'Void'],
+    challenge: ['The browser check did not pass', 'Unverified'],
     internal: ['The examination failed', 'Error'],
   };
   const [title, stamp] = titles[f.kind] ?? titles.internal;
@@ -256,7 +296,7 @@ $('form').addEventListener('submit', (e) => {
 });
 $('url').addEventListener('input', () => {
   $('hint').classList.remove('bad');
-  $('hint').textContent = 'One visit to the page and a handful of its scripts. Nothing about the subject is stored.';
+  $('hint').textContent = HINT;
 });
 
 document.addEventListener('click', (e) => {

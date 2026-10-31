@@ -75,6 +75,8 @@ main { max-inline-size: var(--container); margin-inline: auto; padding: 0 var(--
 .row button:disabled { opacity: 0.55; cursor: not-allowed; }
 .hint { min-height: 1lh; font: 400 var(--text-sm)/1.5 var(--font-outlier); color: var(--color-ink-2); }
 .hint.bad { color: var(--color-error); }
+/* Reserves the Turnstile frame so the form does not jump when it loads. */
+.check { min-height: 65px; }
 .try { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); color: var(--color-ink-2); font-size: var(--text-md); }
 .chip {
   position: relative; min-height: 36px; padding: 0 var(--space-sm);
