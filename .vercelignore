@@ -1,0 +1,9 @@
+# Uploaded by `vercel deploy`: only what the build needs.
+node_modules
+docs/PLAN.md
+.cloudflare
+.wrangler
+dist
+.hallmark
+.env*
+.dev.vars*
