@@ -244,7 +244,7 @@ main { max-inline-size: var(--container); margin-inline: auto; padding: 0 var(--
 .security .pass { color: var(--color-ink-2); }
 .security .fail { color: var(--color-error); }
 
-.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; gap: var(--space-lg); }
+.steps { list-style: none; margin: 0; padding: 0; counter-reset: step; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-lg); }
 .steps li { position: relative; padding-left: var(--space-2xl); counter-increment: step; }
 .steps li::before { content: counter(step, decimal-leading-zero); position: absolute; left: 0; top: var(--space-3xs); font: 400 var(--text-lg)/1 var(--font-outlier); color: var(--color-accent); }
 .steps .phase { display: block; margin-bottom: var(--space-3xs); font-style: italic; font-size: var(--text-md); color: var(--color-ink-2); }
@@ -253,7 +253,7 @@ main { max-inline-size: var(--container); margin-inline: auto; padding: 0 var(--
 .cmd pre {
   margin: 0; padding: var(--space-sm) var(--space-3xl) var(--space-sm) var(--space-md); overflow-x: auto;
   background: var(--color-paper-2); border: 1px solid var(--color-rule); border-radius: var(--radius-card);
-  font: 400 var(--text-md)/1.55 var(--font-outlier); white-space: pre-wrap; word-break: break-word;
+  font: 400 var(--text-md)/1.55 var(--font-outlier); white-space: pre;
 }
 .cmd button {
   position: absolute; right: var(--space-xs); top: var(--space-xs); min-height: 32px; padding: 0 var(--space-sm);
@@ -323,6 +323,23 @@ main { max-inline-size: var(--container); margin-inline: auto; padding: 0 var(--
   .row input { font-size: var(--text-md); }
   .row button { padding: 0 var(--space-md); }
   .colophon { padding: var(--space-md) var(--space-md) var(--space-lg); }
+}
+
+/* ── Phones: verdicts wrap whole, checks stack, steps take the full measure ── */
+@media (max-width: 600px) {
+  .verdicts { display: flex; flex-wrap: wrap; align-items: flex-end; }
+  .stamp.big { font-size: var(--text-xl); white-space: nowrap; }
+  .security tr { display: grid; grid-template-columns: 3.5rem minmax(0, 1fr); column-gap: var(--space-sm); padding: var(--space-sm) 0; border-bottom: 1px dotted var(--color-rule); }
+  .security th, .security td { padding: 0; border: 0; }
+  .security th { grid-column: 1 / -1; inline-size: auto; margin-bottom: var(--space-3xs); }
+  .security td.mark { inline-size: auto; }
+  .steps li { padding-left: 0; }
+  .steps li::before { position: static; margin-right: var(--space-xs); font-size: var(--text-md); }
+  .steps .phase { display: inline; }
+  /* The code scrolls sideways here, so Copy moves up to the step's phase line, clear of it. */
+  .cmd { position: static; }
+  .cmd pre { padding-right: var(--space-md); }
+  .cmd button { top: calc(-1 * var(--space-2xs)); right: 0; }
 }
 
 @media (prefers-reduced-motion: reduce) {
