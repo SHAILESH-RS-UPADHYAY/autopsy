@@ -73,13 +73,13 @@ export async function examine(raw: string, emit: (e: StageEvent) => void, opts: 
   log('dns', 'start', 'Resolving DNS records', t);
   const records = await probeDns(host).catch(() => null);
   const ips = [...(records?.a ?? []), ...(records?.aaaa ?? [])];
-  log('dns', 'done', records ? `${ips.length} address(es), ${records.ns.length} nameserver(s), ${records.mx.length} mail exchanger(s)` : 'No DNS answer', t);
+  log('dns', 'done', records ? `${ips.length} address(es), ${records.ns.length} nameserver(s) and ${records.mx.length} mail exchanger(s)` : 'No DNS answer', t);
 
   t = Date.now();
   log('document', 'start', `Fetching ${url.href}`, t);
   const doc = await safeFetch(url.href, { ...base, maxBytes: 3_000_000, timeoutMs: 9000 });
   if (doc.truncated) notes.push('The document was larger than 3 MB; only the first 3 MB was examined.');
-  log('document', 'done', `HTTP ${doc.status} · ${(doc.bytes / 1024).toFixed(0)} KB · ${doc.redirects.length} redirect(s) · ${doc.ms} ms`, t);
+  log('document', 'done', `HTTP ${doc.status}, ${(doc.bytes / 1024).toFixed(0)} KB, ${doc.redirects.length} redirect(s), ${doc.ms} ms`, t);
 
   const finalUrl = new URL(doc.url);
   t = Date.now();
@@ -88,7 +88,7 @@ export async function examine(raw: string, emit: (e: StageEvent) => void, opts: 
     log('tls', 'start', 'Reading the TLS certificate', t);
     const address = doc.address || (await dns.promises.lookup(finalUrl.hostname).then((r) => r.address).catch(() => ''));
     tlsInfo = address && isAllowed(address) ? await probeTls(finalUrl.hostname, address).catch(() => null) : null;
-    log('tls', 'done', tlsInfo ? `${tlsInfo.protocol} · ${tlsInfo.issuer} · ${tlsInfo.daysLeft} days left · ALPN ${tlsInfo.alpn || 'none'}` : 'No certificate read', t);
+    log('tls', 'done', tlsInfo ? `${tlsInfo.protocol}, ${tlsInfo.issuer}, ${tlsInfo.daysLeft} days left, ALPN ${tlsInfo.alpn || 'none'}` : 'No certificate read', t);
   } else {
     log('tls', 'skipped', 'Plain http: no certificate', t);
   }
@@ -143,7 +143,7 @@ export async function examine(raw: string, emit: (e: StageEvent) => void, opts: 
   const verdict = renderingVerdict(evidence, findings);
   const security = securityReport(evidence, url.protocol === 'http:');
   const steps = protocol(findings, verdict, security);
-  log('verdict', 'done', `${verdict.mode} · security grade ${security.grade}`, t);
+  log('verdict', 'done', `${verdict.mode}, security grade ${security.grade}`, t);
 
   const now = new Date();
   return {
