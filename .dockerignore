@@ -1,3 +1,7 @@
 node_modules
 docs
 .git
+.cloudflare
+.wrangler
+.hallmark
+worker
